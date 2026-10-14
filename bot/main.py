@@ -162,7 +162,7 @@ def get_main_keyboard():
             InlineKeyboardButton("💬 گروه پشتیبانی", url="https://t.me/GPBOTXTMBOT"),
         ],
         [
-            InlineKeyboardButton("🆚 تفاوت رایگان و اشتراکی", callback_data="diff"),
+            InlineKeyboardButton("🆚 تفاوت ربات رایگان با اشتراکی", callback_data="diff"),
         ],
         [
             InlineKeyboardButton("👨‍💻 پشتیبانی", url="https://t.me/XMrAmer"),
