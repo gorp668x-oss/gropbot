@@ -1,5 +1,5 @@
-﻿from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+﻿from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from bot.config import TELEGRAM_TOKEN
 from bot.database import init_db, get_connection
 
@@ -43,6 +43,40 @@ WELCOME_TEXT = """🔱 سلام {mention} 🌹
 
 <b>【 Licenced By 🄱🄾🅃🅇 】</b>"""
 
+
+def get_main_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton("➕ افزودن به گروه", url="https://t.me/BOTXTMBOT?startgroup=true"),
+        ],
+        [
+            InlineKeyboardButton("📢 کانال ما", url="https://t.me/BOTXTMBOT"),
+            InlineKeyboardButton("💬 پشتیبانی", url="https://t.me/XMrAmer"),
+        ],
+        [
+            InlineKeyboardButton("📚 راهنما", callback_data="help"),
+            InlineKeyboardButton("ℹ️ درباره ما", callback_data="about"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+HELP_TEXT = """📚 <b>راهنمای بات اکس</b>
+
+برای استفاده از امکانات ربات:
+1️⃣ ربات رو به گروهت اضافه کن
+2️⃣ ربات رو ادمین کن
+3️⃣ از منوی ربات استفاده کن"""
+
+ABOUT_TEXT = """ℹ️ <b>درباره بات اکس</b>
+
+بات اکس یک ربات مدیریت گروه حرفه‌ای با تمرکز بر سرعت، امنیت و پایداریه.
+
+🖥️ توسعه توسط تیم بات اکس
+
+🌟 وقتی کیفیت حرف می‌زنه، نیازی به ادعا نیست."""
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     mention = f'<a href="tg://user?id={user.id}">𓄂꯭ꪰᴀ꯭ᷧᴍ꯭ⷨᴇ꯭ⷷʀ꯭ᷢ↬𓃮™</a>'
@@ -60,14 +94,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cur.close()
     conn.close()
 
-    await update.message.reply_html(WELCOME_TEXT.format(mention=mention))
+    await update.message.reply_html(
+        WELCOME_TEXT.format(mention=mention),
+        reply_markup=get_main_keyboard()
+    )
+
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "help":
+        await query.message.reply_html(HELP_TEXT)
+    elif query.data == "about":
+        await query.message.reply_html(ABOUT_TEXT)
+
 
 def main():
     init_db()
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button_handler))
     print("Bot is running...")
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
