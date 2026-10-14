@@ -117,9 +117,10 @@ def get_main_keyboard():
         ],
         [
             InlineKeyboardButton("📢 کانال ربات", url="https://t.me/BOTXTMBOT"),
-            InlineKeyboardButton("👨‍💻 پشتیبانی", url="https://t.me/XMrAmer"),
+            InlineKeyboardButton("💬 گروه پشتیبانی", url="https://t.me/GPBOTXTMBOT"),
         ],
         [
+            InlineKeyboardButton("👨‍💻 پشتیبانی", url="https://t.me/XMrAmer"),
             InlineKeyboardButton("ℹ️ درباره ما", callback_data="about"),
         ],
     ]
