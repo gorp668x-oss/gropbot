@@ -15,28 +15,19 @@ from bot.handlers.welcome import (
     welcome_on_command,
     welcome_off_command,
 )
+from bot.handlers.edit_mode import edit_mode_command
 
 
-# ============================================================
-# Regex انعطاف‌پذیر خوشامد
-# پشتیبانی از: آ / ا / بدون حرف
-# پشتیبانی از: فاصله / نیم‌فاصله / بدون فاصله
-# ============================================================
+# Regex خوشامد
 WELCOME_ON_PATTERN = (
-    r"^خوش"
-    r"[\s‌]*"
-    r"(?:[اآ]?مد(?:گویی|گويي)?)?"
-    r"[\s‌]*"
-    r"(?:روشن|فعال)$"
+    r"^خوش[\s‌]*(?:[اآ]?مد(?:گویی|گويي)?)?[\s‌]*(?:روشن|فعال)$"
+)
+WELCOME_OFF_PATTERN = (
+    r"^خوش[\s‌]*(?:[اآ]?مد(?:گویی|گويي)?)?[\s‌]*(?:خاموش|غیر[\s‌]*فعال)$"
 )
 
-WELCOME_OFF_PATTERN = (
-    r"^خوش"
-    r"[\s‌]*"
-    r"(?:[اآ]?مد(?:گویی|گويي)?)?"
-    r"[\s‌]*"
-    r"(?:خاموش|غیر[\s‌]*فعال)$"
-)
+# دستور حالت ها
+EDIT_MODE_PATTERN = r"^(?:حالت[\s‌]*ها|حالت[\s‌]*های?)$"
 
 
 def main():
@@ -46,7 +37,7 @@ def main():
     # /start فقط در پیوی
     app.add_handler(CommandHandler("start", start, filters=filters.ChatType.PRIVATE))
 
-    # ===== دستورات قفل لینک =====
+    # قفل لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^قفل\s*لینک$"),
         lock_link_command
@@ -64,7 +55,7 @@ def main():
         unlock_link_command
     ))
 
-    # ===== دستورات خوشامد =====
+    # خوشامد
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(WELCOME_ON_PATTERN),
         welcome_on_command
@@ -72,6 +63,12 @@ def main():
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(WELCOME_OFF_PATTERN),
         welcome_off_command
+    ))
+
+    # حالت ها
+    app.add_handler(MessageHandler(
+        filters.ChatType.GROUPS & filters.Regex(EDIT_MODE_PATTERN),
+        edit_mode_command
     ))
 
     # Callback handler
@@ -89,7 +86,7 @@ def main():
         link_guard
     ), group=1)
 
-    # خوش‌آمدگویی اعضای جدید
+    # خوش‌آمدگویی
     app.add_handler(MessageHandler(
         filters.StatusUpdate.NEW_CHAT_MEMBERS & filters.ChatType.GROUPS,
         welcome_new_member
