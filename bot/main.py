@@ -28,6 +28,14 @@ def main():
         filters.ChatType.GROUPS & filters.Regex(r"^باز\s*کردن\s*قفل\s*لینک$"),
         unlock_link_command
     ))
+    app.add_handler(MessageHandler(
+        filters.ChatType.GROUPS & filters.Regex(r"^باز\s*کردن\s*لینک$"),
+        unlock_link_command
+    ))
+    app.add_handler(MessageHandler(
+        filters.ChatType.GROUPS & filters.Regex(r"^بازکردن\s*لینک$"),
+        unlock_link_command
+    ))
 
     # Callback handler
     app.add_handler(CallbackQueryHandler(button_handler))
