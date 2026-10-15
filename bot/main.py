@@ -21,11 +21,11 @@ def main():
 
     # دستورات فارسی قفل لینک
     app.add_handler(MessageHandler(
-        filters.ChatType.GROUPS & filters.Regex(r"^قفل لینک$"),
+        filters.ChatType.GROUPS & filters.Regex(r"^قفل\s*لینک$"),
         lock_link_command
     ))
     app.add_handler(MessageHandler(
-        filters.ChatType.GROUPS & filters.Regex(r"^باز کردن قفل لینک$"),
+        filters.ChatType.GROUPS & filters.Regex(r"^باز\s*کردن\s*قفل\s*لینک$"),
         unlock_link_command
     ))
 
