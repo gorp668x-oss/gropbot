@@ -4,7 +4,7 @@ import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.handlers.locklink.panel import is_locklink_enabled
+from bot.database import get_connection
 from bot.utils.permissions import BOT_OWNER_ID
 
 
@@ -12,6 +12,16 @@ URL_PATTERN = re.compile(
     r'(https?://|www\.|t\.me/|telegram\.me/|telegram\.dog/|@[a-zA-Z0-9_]{3,})',
     re.IGNORECASE
 )
+
+
+def is_locklink_enabled(chat_id: int) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT lock_link FROM group_settings WHERE chat_id = %s", (chat_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return bool(row and row["lock_link"])
 
 
 async def _delete_later(context, chat_id, message_id, seconds):
@@ -61,11 +71,9 @@ async def link_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.delete()
             warn = await context.bot.send_message(
                 chat_id=chat.id,
-                text=f"🚫 {user.mention_html()} عزیز، ارسال لینک توی این گروه ممنوعه!",
+                text=f"🚫 {user.mention_html()} عزیز، ارسال لینک در این گروه ممنوع است.",
                 parse_mode="HTML"
             )
-            asyncio.create_task(
-                _delete_later(context, chat.id, warn.message_id, 5)
-            )
+            asyncio.create_task(_delete_later(context, chat.id, warn.message_id, 5))
         except Exception as e:
             print(f"Error deleting message: {e}")
