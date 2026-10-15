@@ -10,6 +10,7 @@ from bot.handlers.buttons import button_handler
 from bot.handlers.unknown import unknown_message
 from bot.handlers.locklink import lock_link_command, unlock_link_command
 from bot.handlers.link_guard import link_guard
+from bot.handlers.welcome import welcome_new_member
 
 
 def main():
@@ -57,6 +58,12 @@ def main():
         (filters.TEXT | filters.CAPTION) & filters.ChatType.GROUPS,
         link_guard
     ), group=1)
+
+    # خوش‌آمدگویی اعضای جدید
+    app.add_handler(MessageHandler(
+        filters.StatusUpdate.NEW_CHAT_MEMBERS & filters.ChatType.GROUPS,
+        welcome_new_member
+    ), group=2)
 
     print("Bot is running...")
     app.run_polling()
