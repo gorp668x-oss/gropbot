@@ -19,25 +19,31 @@ def main():
     # /start فقط در پیوی
     app.add_handler(CommandHandler("start", start, filters=filters.ChatType.PRIVATE))
 
-    # دستورات فارسی قفل لینک
+    # دستور فعال‌سازی: قفل لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^قفل\s*لینک$"),
         lock_link_command
     ))
+
+    # دستور غیرفعال‌سازی: باز کردن قفل لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^باز\s*کردن\s*قفل\s*لینک$"),
         unlock_link_command
     ))
+
+    # دستور غیرفعال‌سازی: باز کردن لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^باز\s*کردن\s*لینک$"),
         unlock_link_command
     ))
+
+    # دستور غیرفعال‌سازی: بازکردن لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^بازکردن\s*لینک$"),
         unlock_link_command
     ))
 
-    # Callback handler
+    # Callback handler (دکمه‌ها)
     app.add_handler(CallbackQueryHandler(button_handler))
 
     # پاسخ خودکار پیوی
@@ -46,7 +52,7 @@ def main():
         unknown_message
     ))
 
-    # گارد لینک در گروه‌ها (group=1 تا با دستورات فارسی تداخل نکنه)
+    # گارد لینک در گروه‌ها
     app.add_handler(MessageHandler(
         (filters.TEXT | filters.CAPTION) & filters.ChatType.GROUPS,
         link_guard
