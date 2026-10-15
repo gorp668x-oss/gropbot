@@ -1,5 +1,3 @@
-import re
-
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
     MessageHandler, filters,
@@ -20,18 +18,25 @@ from bot.handlers.welcome import (
 
 
 # ============================================================
-# Regex انعطاف‌پذیر برای خوشامد
+# Regex انعطاف‌پذیر خوشامد
+# پشتیبانی از: آ / ا / بدون حرف
+# پشتیبانی از: فاصله / نیم‌فاصله / بدون فاصله
 # ============================================================
-# الگو: خوش + (فاصله یا نیم‌فاصله یا هیچی) + (آمد / امد / آمدگویی / امدگویی / امدگویی) + ... 
-# روشن / فعال / خاموش / غیرفعال / غیر فعال
+WELCOME_ON_PATTERN = (
+    r"^خوش"
+    r"[\s‌]*"
+    r"(?:[اآ]?مد(?:گویی|گويي)?)?"
+    r"[\s‌]*"
+    r"(?:روشن|فعال)$"
+)
 
-WELCOME_PREFIX = r"^خوش[\s‌]*"
-WELCOME_MIDDLE = r"(?:آ?مد(?:گویی|گويي)?|آمدگویی)?[\s‌]*"
-WELCOME_ON = r"(?:روشن|فعال)$"
-WELCOME_OFF = r"(?:خاموش|غیر[\s‌]*فعال)$"
-
-WELCOME_ON_PATTERN = WELCOME_PREFIX + WELCOME_MIDDLE + WELCOME_ON
-WELCOME_OFF_PATTERN = WELCOME_PREFIX + WELCOME_MIDDLE + WELCOME_OFF
+WELCOME_OFF_PATTERN = (
+    r"^خوش"
+    r"[\s‌]*"
+    r"(?:[اآ]?مد(?:گویی|گويي)?)?"
+    r"[\s‌]*"
+    r"(?:خاموش|غیر[\s‌]*فعال)$"
+)
 
 
 def main():
@@ -59,7 +64,7 @@ def main():
         unlock_link_command
     ))
 
-    # ===== دستورات خوشامد (با regex انعطاف‌پذیر) =====
+    # ===== دستورات خوشامد =====
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(WELCOME_ON_PATTERN),
         welcome_on_command
