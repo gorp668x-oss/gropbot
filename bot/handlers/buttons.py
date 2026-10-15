@@ -7,7 +7,6 @@ from bot.texts.more_info import MORE_INFO_TEXT
 from bot.texts.diff import DIFF_TEXT
 from bot.keyboards.main_menu import get_main_keyboard
 from bot.keyboards.back import get_back_keyboard
-from bot.handlers.locklink.panel import locklink_toggle
 
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -15,10 +14,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "noop":
         await query.answer()
-        return
-
-    if query.data == "toggle_locklink":
-        await locklink_toggle(update, context)
         return
 
     await query.answer()
