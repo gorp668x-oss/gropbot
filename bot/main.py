@@ -10,7 +10,11 @@ from bot.handlers.buttons import button_handler
 from bot.handlers.unknown import unknown_message
 from bot.handlers.locklink import lock_link_command, unlock_link_command
 from bot.handlers.link_guard import link_guard
-from bot.handlers.welcome import welcome_new_member
+from bot.handlers.welcome import (
+    welcome_new_member,
+    welcome_on_command,
+    welcome_off_command,
+)
 
 
 def main():
@@ -20,31 +24,43 @@ def main():
     # /start فقط در پیوی
     app.add_handler(CommandHandler("start", start, filters=filters.ChatType.PRIVATE))
 
-    # دستور فعال‌سازی: قفل لینک
+    # ===== دستورات قفل لینک =====
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^قفل\s*لینک$"),
         lock_link_command
     ))
-
-    # دستور غیرفعال‌سازی: باز کردن قفل لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^باز\s*کردن\s*قفل\s*لینک$"),
         unlock_link_command
     ))
-
-    # دستور غیرفعال‌سازی: باز کردن لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^باز\s*کردن\s*لینک$"),
         unlock_link_command
     ))
-
-    # دستور غیرفعال‌سازی: بازکردن لینک
     app.add_handler(MessageHandler(
         filters.ChatType.GROUPS & filters.Regex(r"^بازکردن\s*لینک$"),
         unlock_link_command
     ))
 
-    # Callback handler (دکمه‌ها)
+    # ===== دستورات خوشامدگویی =====
+    app.add_handler(MessageHandler(
+        filters.ChatType.GROUPS & filters.Regex(r"^خوشامد\s*گویی\s*روشن$"),
+        welcome_on_command
+    ))
+    app.add_handler(MessageHandler(
+        filters.ChatType.GROUPS & filters.Regex(r"^خوشامد\s*روشن$"),
+        welcome_on_command
+    ))
+    app.add_handler(MessageHandler(
+        filters.ChatType.GROUPS & filters.Regex(r"^خوشامد\s*گویی\s*خاموش$"),
+        welcome_off_command
+    ))
+    app.add_handler(MessageHandler(
+        filters.ChatType.GROUPS & filters.Regex(r"^خوشامد\s*خاموش$"),
+        welcome_off_command
+    ))
+
+    # Callback handler
     app.add_handler(CallbackQueryHandler(button_handler))
 
     # پاسخ خودکار پیوی
@@ -53,7 +69,7 @@ def main():
         unknown_message
     ))
 
-    # گارد لینک در گروه‌ها
+    # گارد لینک
     app.add_handler(MessageHandler(
         (filters.TEXT | filters.CAPTION) & filters.ChatType.GROUPS,
         link_guard
