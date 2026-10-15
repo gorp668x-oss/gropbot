@@ -97,9 +97,9 @@ async def link_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     mention = user.mention_html()
     warn_text = (
-        f"⫸ کاربر گرامی : {mention}\n\n"
-        f"⌫ ارسال لینک در گروه ممنوع می‌باشد به همین دلیل پیام شما پاک شد !\n\n"
-        f"◂ لطفاً از ارسال لینک خودداری فرمایید.\n\n"
+        f"⫸ کاربر گرامی : {mention} ⚠\n"
+        f"⌫ ارسال لینک در گروه ممنوع می‌باشد به همین دلیل پیام شما پاک شد !\n"
+        f"◂ لطفاً از ارسال لینک خودداری فرمایید.\n"
         f"⋆ با تشکر از همکاری شما."
     )
 
