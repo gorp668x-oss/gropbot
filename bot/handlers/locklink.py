@@ -68,8 +68,8 @@ async def unlock_link_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     # اگه از قبل غیرفعال بود
     if not is_locklink_enabled(chat.id):
-        await message.reply_text("⋅• قفل لینک در حال حاضر غیرفعال است !")
+        await message.reply_text("•⋅ قفل لینک در حال حاضر غیرفعال است !")
         return
 
     set_locklink(chat.id, False)
-    await message.reply_text("⋅• قفل لینک با موفقیت غیرفعال شد !")
+    await message.reply_text("•⋅ قفل لینک با موفقیت غیرفعال شد !")
