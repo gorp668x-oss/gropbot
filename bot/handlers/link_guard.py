@@ -1,5 +1,6 @@
 import re
 import asyncio
+import time
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -12,6 +13,10 @@ URL_PATTERN = re.compile(
     r'(https?://|www\.|t\.me/|telegram\.me/|telegram\.dog/|@[a-zA-Z0-9_]{3,})',
     re.IGNORECASE
 )
+
+# {chat_id: last_warning_timestamp}
+_warn_cooldown = {}
+COOLDOWN_SECONDS = 10
 
 
 def is_locklink_enabled(chat_id: int) -> bool:
@@ -30,6 +35,16 @@ async def _delete_later(context, chat_id, message_id, seconds):
         await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
     except Exception:
         pass
+
+
+def _can_send_warning(chat_id: int) -> bool:
+    """چک می‌کنه آیا الان می‌تونه هشدار بفرسته یا نه"""
+    now = time.time()
+    last = _warn_cooldown.get(chat_id, 0)
+    if now - last >= COOLDOWN_SECONDS:
+        _warn_cooldown[chat_id] = now
+        return True
+    return False
 
 
 async def link_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -66,14 +81,34 @@ async def link_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if has_url_button:
                 break
 
-    if has_link or has_url_button:
-        try:
-            await message.delete()
-            warn = await context.bot.send_message(
-                chat_id=chat.id,
-                text=f"🚫 {user.mention_html()} عزیز، ارسال لینک در این گروه ممنوع است.",
-                parse_mode="HTML"
-            )
-            asyncio.create_task(_delete_later(context, chat.id, warn.message_id, 5))
-        except Exception as e:
-            print(f"Error deleting message: {e}")
+    if not (has_link or has_url_button):
+        return
+
+    # پاک کردن پیام کاربر
+    try:
+        await message.delete()
+    except Exception as e:
+        print(f"Error deleting message: {e}")
+        return
+
+    # هشدار فقط اگه توی ۱۰ ثانیه اخیر هشدار نداده باشیم
+    if not _can_send_warning(chat.id):
+        return
+
+    mention = user.mention_html()
+    warn_text = (
+        f"⫸ کاربر گرامی : {mention}\n\n"
+        f"⌫ ارسال لینک در گروه ممنوع می‌باشد به همین دلیل پیام شما پاک شد !\n\n"
+        f"◂ لطفاً از ارسال لینک خودداری فرمایید.\n\n"
+        f"⋆ با تشکر از همکاری شما."
+    )
+
+    try:
+        warn = await context.bot.send_message(
+            chat_id=chat.id,
+            text=warn_text,
+            parse_mode="HTML"
+        )
+        asyncio.create_task(_delete_later(context, chat.id, warn.message_id, 10))
+    except Exception as e:
+        print(f"Error sending warning: {e}")

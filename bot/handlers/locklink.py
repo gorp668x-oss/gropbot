@@ -51,15 +51,13 @@ async def lock_link_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    set_locklink(chat.id, True)
+    # اگه از قبل فعال بود
+    if is_locklink_enabled(chat.id):
+        await message.reply_text("⋅• قفل لینک در حال حاضر فعال است !")
+        return
 
-    await message.reply_text(
-        "🔒 <b>قفل لینک با موفقیت فعال شد.</b>\n\n"
-        "از این پس، ارسال هرگونه لینک توسط اعضای عادی در گروه ممنوع بوده و "
-        "پیام ارسال‌کننده حذف خواهد شد.\n\n"
-        "👑 ادمین‌ها و سازنده ربات از این محدودیت مستثنی هستند.",
-        parse_mode="HTML"
-    )
+    set_locklink(chat.id, True)
+    await message.reply_text("⋅• قفل لینک با موفقیت فعال شد !")
 
 
 async def unlock_link_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -78,10 +76,10 @@ async def unlock_link_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
         return
 
-    set_locklink(chat.id, False)
+    # اگه از قبل غیرفعال بود
+    if not is_locklink_enabled(chat.id):
+        await message.reply_text("⋅• قفل لینک در حال حاضر غیرفعال است !")
+        return
 
-    await message.reply_text(
-        "🔓 <b>قفل لینک با موفقیت غیرفعال شد.</b>\n\n"
-        "از این پس، اعضای گروه می‌توانند بدون محدودیت لینک ارسال کنند.",
-        parse_mode="HTML"
-    )
+    set_locklink(chat.id, False)
+    await message.reply_text("⋅• قفل لینک با موفقیت غیرفعال شد !")
