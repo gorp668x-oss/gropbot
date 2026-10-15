@@ -40,15 +40,10 @@ async def lock_link_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.effective_message
 
     if chat.type == "private":
-        await message.reply_text("⚠️ این دستور تنها در گروه‌ها قابل استفاده است.")
         return
 
+    # اگه کاربر مجاز نیست، هیچ واکنشی نشون نده
     if not await is_admin_or_owner(update, context):
-        await message.reply_text(
-            "🚫 <b>دسترسی رد شد</b>\n\n"
-            "این دستور تنها برای <b>مالک گروه، ادمین‌ها و سازنده ربات</b> قابل استفاده است.",
-            parse_mode="HTML"
-        )
         return
 
     # اگه از قبل فعال بود
@@ -65,15 +60,10 @@ async def unlock_link_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     message = update.effective_message
 
     if chat.type == "private":
-        await message.reply_text("⚠️ این دستور تنها در گروه‌ها قابل استفاده است.")
         return
 
+    # اگه کاربر مجاز نیست، هیچ واکنشی نشون نده
     if not await is_admin_or_owner(update, context):
-        await message.reply_text(
-            "🚫 <b>دسترسی رد شد</b>\n\n"
-            "این دستور تنها برای <b>مالک گروه، ادمین‌ها و سازنده ربات</b> قابل استفاده است.",
-            parse_mode="HTML"
-        )
         return
 
     # اگه از قبل غیرفعال بود
