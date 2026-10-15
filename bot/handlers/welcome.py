@@ -7,10 +7,11 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.database import get_connection
+from bot.handlers.edit_mode import is_edit_mode_enabled
 
 
 # ============================================================
-# ایموجی‌های تصادفی برای تنوع
+# ایموجی‌های تصادفی
 # ============================================================
 EMOJI_GREETING = ["💐", "🌸", "🌹", "🌷", "🌺", "💮", "🏵️", "🌻", "🌼", "🪷", "🍀", "🎉", "🎊", "✨", "🌟"]
 EMOJI_WELCOME = ["🌸", "🌼", "🌺", "💐", "🌷", "🌹", "🪷", "🌻", "✨", "💫", "⭐", "🌟", "🎈", "🎀", "💝"]
@@ -28,13 +29,11 @@ def to_persian_digits(s):
 
 
 def get_iran_time():
-    """زمان دقیق ایران"""
     iran_tz = timezone(timedelta(hours=3, minutes=30))
     return datetime.now(iran_tz)
 
 
 def get_persian_date():
-    """تاریخ و ساعت شمسی دقیق ایران"""
     now = get_iran_time()
     jdate = jdatetime.datetime.fromgregorian(datetime=now)
 
@@ -112,6 +111,47 @@ def set_welcome(chat_id: int, enabled: bool):
 
 
 # ============================================================
+# انیمیشن تایپ روی خوشامد
+# ============================================================
+async def _send_with_typing(context, chat_id: int, text: str):
+    """پیام رو با انیمیشن تایپ سریع می‌فرسته"""
+    try:
+        # پیام اول خالی با یه نقطه
+        msg = await context.bot.send_message(chat_id=chat_id, text=".")
+
+        # سرعت خیلی زیاد — هر ۰.۰۵ ثانیه یه کاراکتر (یا بیشتر)
+        # چون پیام طولانیه، پله‌پله اضافه می‌کنیم که خیلی سریع باشه
+        step = max(1, len(text) // 25)  # ۲۵ مرحله برای رسیدن به متن کامل
+
+        i = step
+        while i < len(text):
+            chunk = text[:i]
+            try:
+                await msg.edit_text(chunk, parse_mode="HTML")
+            except Exception:
+                pass
+            await asyncio.sleep(0.05)
+            i += step
+
+        # متن کامل
+        try:
+            await msg.edit_text(text, parse_mode="HTML")
+        except Exception:
+            pass
+
+    except Exception as e:
+        print(f"Error in typing animation: {e}")
+
+
+async def _send_simple(context, chat_id: int, text: str):
+    """ارسال ساده بدون انیمیشن"""
+    try:
+        await context.bot.send_message(chat_id=chat_id, text=text, parse_mode="HTML")
+    except Exception as e:
+        print(f"Error sending welcome: {e}")
+
+
+# ============================================================
 # خوش‌آمدگویی
 # ============================================================
 async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -121,7 +161,6 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not message or not message.new_chat_members:
         return
 
-    # حذف پیام سیستمی
     try:
         await message.delete()
     except Exception:
@@ -146,14 +185,12 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"{rnd(EMOJI_DATE)} تاریخ ورود : {date_str}"
         )
 
-        try:
-            await context.bot.send_message(
-                chat_id=chat.id,
-                text=text,
-                parse_mode="HTML"
-            )
-        except Exception as e:
-            print(f"Error sending welcome: {e}")
+        if is_edit_mode_enabled(chat.id):
+            # با انیمیشن تایپ سریع
+            asyncio.create_task(_send_with_typing(context, chat.id, text))
+        else:
+            # ساده
+            asyncio.create_task(_send_simple(context, chat.id, text))
 
 
 # ============================================================
@@ -167,7 +204,6 @@ async def welcome_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if chat.type == "private":
         return
-
     if not await is_admin_or_owner(update, context):
         return
 
@@ -187,7 +223,6 @@ async def welcome_off_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if chat.type == "private":
         return
-
     if not await is_admin_or_owner(update, context):
         return
 
