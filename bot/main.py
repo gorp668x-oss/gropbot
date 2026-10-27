@@ -1,3 +1,4 @@
+from telegram.request import HTTPXRequest
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
     MessageHandler, filters,
@@ -32,7 +33,8 @@ EDIT_MODE_PATTERN = r"^(?:حالت[\s‌]*ها|حالت[\s‌]*های?)$"
 
 def main():
     init_db()
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    request = HTTPXRequest(connect_timeout=15.0, read_timeout=30.0, pool_timeout=10.0)
+    app = Application.builder().token(TELEGRAM_TOKEN).request(request).build()
 
     # /start فقط در پیوی
     app.add_handler(CommandHandler("start", start, filters=filters.ChatType.PRIVATE))
