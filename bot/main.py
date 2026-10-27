@@ -16,7 +16,7 @@ from bot.handlers.welcome import (
     welcome_on_command,
     welcome_off_command,
 )
-from bot.handlers.edit_mode import edit_mode_command
+from bot.handlers.panel import panel_command
 
 
 # Regex خوشامد
@@ -27,8 +27,6 @@ WELCOME_OFF_PATTERN = (
     r"^خوش[\s‌]*(?:[اآ]?مد(?:گویی|گويي)?)?[\s‌]*(?:خاموش|غیر[\s‌]*فعال)$"
 )
 
-# دستور حالت ها
-EDIT_MODE_PATTERN = r"^(?:حالت[\s‌]*ها|حالت[\s‌]*های?)$"
 
 
 def main():
@@ -67,10 +65,10 @@ def main():
         welcome_off_command
     ))
 
-    # حالت ها
+    # پنل مدیریت
     app.add_handler(MessageHandler(
-        filters.ChatType.GROUPS & filters.Regex(EDIT_MODE_PATTERN),
-        edit_mode_command
+        filters.ChatType.GROUPS & filters.Regex(r"^پنل$"),
+        panel_command
     ))
 
     # Callback handler

@@ -8,6 +8,7 @@ from bot.texts.diff import DIFF_TEXT
 from bot.keyboards.main_menu import get_main_keyboard
 from bot.keyboards.back import get_back_keyboard
 from bot.handlers.edit_mode import edit_mode_callback
+from bot.handlers.panel import panel_callback
 
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -16,6 +17,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # callback های حالت ها
     if query.data.startswith("editmode_"):
         await edit_mode_callback(update, context)
+        return
+
+    if query.data.startswith("panel_"):
+        await panel_callback(update, context)
         return
 
     if query.data == "noop":
