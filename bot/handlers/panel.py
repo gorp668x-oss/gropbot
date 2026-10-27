@@ -17,16 +17,14 @@ async def panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_admin_or_owner(update, context):
         return
 
+    text = "👤 <b>مدیر</b>\n\n" + "لطفا بخش مورد نظر را انتخاب کنید :"
+    
     await update.message.reply_text(
-        "👤 <b>مدیر</b>
-
-"
-        "لطفا بخش مورد نظر را انتخاب کنید :",
+        text,
         parse_mode="HTML",
         reply_markup=get_main_panel_keyboard()
     )
 
-# این تابع برای هندل کردن کلیک روی دکمه های پنل فعلا فقط یه پیام میده که کار نمیکنه
 async def panel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer("این بخش به زودی فعال می‌شود!", show_alert=True)
