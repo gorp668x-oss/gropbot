@@ -18,6 +18,9 @@ EMOJI_WELCOME = ["🌸", "🌼", "🌺", "💐", "🌷", "🌹", "🪷", "🌻",
 EMOJI_TIME = ["⏱️", "⏰", "🕐", "🕑", "🕒", "⌚", "⏳", "🕰️", "🕓", "🕔", "🕕"]
 EMOJI_DATE = ["📆", "📅", "🗓️", "📇", "📋", "📌", "📍"]
 
+# جلوگیری از ارسال چندباره خوش آمدگویی
+_welcome_cooldown = {}
+
 
 def rnd(arr):
     return random.choice(arr)
@@ -172,9 +175,18 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
     time_str, date_str = get_persian_date()
     group_name = chat.title or "گروه"
 
+    import time
+    current_time = time.time()
+
     for member in message.new_chat_members:
         if member.id == context.bot.id:
             continue
+
+        # چک کردن اینکه تو 10 ثانیه اخیر برای این کاربر پیام نفرستاده باشیم
+        last_welcome = _welcome_cooldown.get(member.id, 0)
+        if current_time - last_welcome < 10:
+            continue
+        _welcome_cooldown[member.id] = current_time
 
         mention = member.mention_html()
 
