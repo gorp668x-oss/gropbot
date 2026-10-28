@@ -131,7 +131,7 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mention = user.mention_html()
         warn_text = (
             f"⫸ کاربر گرامی : {mention} ⚠\n"
-            f"⌫ ارسال {media_name} در گروه ممنوع می‌باشد به همین دلیل پیام شما پاک شد !\n"
+            f"⌫ ارسال {media_name} در گروه ممنوع می‌باشد به همین دلیل پیام شما حذف شد !\n"
             f"⋆ با تشکر از همکاری شما."
         )
         try:
