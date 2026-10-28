@@ -3,7 +3,6 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from bot.utils.permissions import is_admin_or_owner
 
-# ذخیره اطلاعات پنل‌ها: {message_id: {"owner_id": int, "timer_task": asyncio.Task}}
 _panel_sessions = {}
 
 def get_main_panel_keyboard():
@@ -15,9 +14,8 @@ def get_main_panel_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 async def close_panel_after_timeout(context: ContextTypes.DEFAULT_TYPE, chat_id: int, message_id: int):
-    await asyncio.sleep(180) # 3 دقیقه = 180 ثانیه
+    await asyncio.sleep(180) # 3 دقیقه
     try:
-        # اگر پنل هنوز باز بود و حذف نشده بود
         if message_id in _panel_sessions:
             await context.bot.edit_message_text(
                 chat_id=chat_id,
@@ -42,7 +40,6 @@ async def panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=get_main_panel_keyboard()
     )
     
-    # ذخیره پنل و شروع تایمر 3 دقیقه ای
     task = asyncio.create_task(close_panel_after_timeout(context, chat.id, msg.message_id))
     _panel_sessions[msg.message_id] = {
         "owner_id": update.effective_user.id,
@@ -57,15 +54,16 @@ async def panel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     session = _panel_sessions.get(message_id)
     
+    # اگه پنل تو دیکشنری نبود یعنی بسته شده
     if not session:
-        await query.answer("⋅• این پنل منقضی شده است!", show_alert=True)
+        await query.answer()
         return
 
     if user_id != session["owner_id"]:
         await query.answer("⋅• این پنل برای شما نیست !", show_alert=True)
         return
 
-    # کاربر در حال استفاده از پنل است، تایمر قبلی را لغو و تایمر جدید می‌سازیم
+    # کنسل کردن تایمر قبلی (چون کاربر داره استفاده می‌کنه)
     if "timer_task" in session and not session["timer_task"].done():
         session["timer_task"].cancel()
 
@@ -77,6 +75,6 @@ async def panel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     await query.answer("این بخش به زودی فعال می‌شود!", show_alert=True)
     
-    # ریست کردن تایمر 3 دقیقه ای بعد از هر کلیک
+    # ریست کردن تایمر
     task = asyncio.create_task(close_panel_after_timeout(context, chat_id, message_id))
     session["timer_task"] = task
