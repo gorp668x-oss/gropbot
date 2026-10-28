@@ -136,6 +136,6 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         try:
             warn = await context.bot.send_message(chat_id=chat.id, text=warn_text, parse_mode="HTML")
-            asyncio.create_task(delete_later(context, chat.id, warn.message_id, 10))
+            asyncio.create_task(delete_later(context, chat.id, warn.message_id, 15))
         except Exception:
             pass
