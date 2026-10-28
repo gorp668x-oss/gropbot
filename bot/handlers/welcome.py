@@ -179,10 +179,10 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
         mention = member.mention_html()
 
         text = (
-            f"سلام {mention} عزیز {rnd(EMOJI_GREETING)}\n"
+            f"⋅• سلام {mention} عزیز {rnd(EMOJI_GREETING)}\n"
             f"به گروه <b>{group_name}</b> خوش اومدین {rnd(EMOJI_WELCOME)}\n\n"
-            f"{rnd(EMOJI_TIME)} زمان ورود : {time_str}\n"
-            f"{rnd(EMOJI_DATE)} تاریخ ورود : {date_str}"
+            f"{rnd(EMOJI_TIME)} زمان ورود : ( {time_str} )\n"
+            f"{rnd(EMOJI_DATE)} تاریخ ورود : ( {date_str} )"
         )
 
         if is_edit_mode_enabled(chat.id):
