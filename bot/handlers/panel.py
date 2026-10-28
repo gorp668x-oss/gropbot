@@ -17,7 +17,7 @@ async def panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_admin_or_owner(update, context):
         return
 
-    text = "⋅• بخش مورد نظر خود را انتخاب کنید :\n    ──┅═✾ صفحه اصلی ✾═┅──"
+    text = "⋅• بخش مورد نظر را انتخاب کنید :\n    ──┅═✾ صفحه اصلی ✾═┅──"
     
     await update.message.reply_text(
         text,
