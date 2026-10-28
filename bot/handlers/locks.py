@@ -3,6 +3,8 @@ from telegram.ext import ContextTypes
 from bot.database import get_connection
 from bot.utils.permissions import is_admin_or_owner, BOT_OWNER_ID
 import asyncio
+import os
+import requests
 
 LOCK_TYPES = {
     'گیف': 'lock_gif',
@@ -81,6 +83,44 @@ async def unlock_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def lock_media(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'رسانه', True)
 async def unlock_media(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'رسانه', False)
 
+async def lock_voice(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'ویس', True)
+async def unlock_voice(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'ویس', False)
+
+async def lock_porn(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'پورن', True)
+async def unlock_porn(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'پورن', False)
+
+async def lock_id(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'آیدی', True)
+async def unlock_id(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'آیدی', False)
+
+async def lock_tabchi(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'تبچی', True)
+async def unlock_tabchi(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'تبچی', False)
+
+async def lock_group(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'گروه', True)
+async def unlock_group(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'گروه', False)
+
+async def is_porn_media(file_url: str) -> bool:
+    api_user = os.getenv("SIGHTENGINE_USER")
+    api_secret = os.getenv("SIGHTENGINE_SECRET")
+    if not api_user or not api_secret:
+        return False
+    try:
+        params = {
+            'models': 'nudity-2.1',
+            'api_user': api_user,
+            'api_secret': api_secret,
+            'url': file_url
+        }
+        r = requests.get('https://api.sightengine.com/1.0/check.json', params=params, timeout=10)
+        output = r.json()
+        if output.get('status') == 'failure':
+            return False
+        nudity = output.get('nudity', {})
+        if nudity.get('sexual_activity', 0) > 0.5 or nudity.get('sexual_display', 0) > 0.5:
+            return True
+    except Exception:
+        pass
+    return False
+
 async def delete_later(context, chat_id, message_id, seconds):
     await asyncio.sleep(seconds)
     try:
@@ -88,7 +128,6 @@ async def delete_later(context, chat_id, message_id, seconds):
     except Exception:
         pass
 
-# محافظ رسانه‌ها
 async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.effective_message
     chat = update.effective_chat
@@ -98,7 +137,6 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     if user.id == BOT_OWNER_ID:
         return
-        
     try:
         member = await context.bot.get_chat_member(chat.id, user.id)
         if member.status in ("administrator", "creator"):
@@ -107,7 +145,8 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         pass
 
     media_name = None
-    
+    text = (message.text or message.caption or "").lower()
+
     if message.animation:
         if is_lock_enabled(chat.id, 'lock_gif') or is_lock_enabled(chat.id, 'lock_media'):
             media_name = "گیف"
@@ -117,6 +156,14 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif message.photo:
         if is_lock_enabled(chat.id, 'lock_photo') or is_lock_enabled(chat.id, 'lock_media'):
             media_name = "عکس"
+        elif is_lock_enabled(chat.id, 'lock_porn'):
+            try:
+                tg_file = await context.bot.get_file(message.photo[-1].file_id)
+                file_url = tg_file.file_path
+                if await is_porn_media(file_url):
+                    media_name = "محتوای غیراخلاقی"
+            except Exception:
+                pass
     elif message.video:
         if is_lock_enabled(chat.id, 'lock_video') or is_lock_enabled(chat.id, 'lock_media'):
             media_name = "فیلم"
@@ -130,10 +177,7 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if is_lock_enabled(chat.id, 'lock_media'):
             media_name = "رسانه"
 
-    # بررسی متنی برای قفل‌های خاص
-    text = (message.text or message.caption or "").lower()
-    
-    if text:
+    if not media_name and text:
         if is_lock_enabled(chat.id, 'lock_id') and ('@' in text or 't.me/' in text or 'telegram.me/' in text):
             media_name = "آیدی/لینک"
         elif is_lock_enabled(chat.id, 'lock_group') and ('t.me/' in text or 'telegram.me/' in text or 'joinchat' in text):
@@ -148,7 +192,6 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.delete()
         except Exception:
             return
-
         mention = user.mention_html()
         warn_text = (
             f"⫸ کاربر گرامی : {mention} ⚠\n"
