@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from bot.database import get_connection
 from bot.utils.permissions import is_admin_or_owner, BOT_OWNER_ID
+import asyncio
 
 LOCK_TYPES = {
     'گیف': 'lock_gif',
@@ -75,6 +76,13 @@ async def unlock_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def lock_media(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'رسانه', True)
 async def unlock_media(update: Update, context: ContextTypes.DEFAULT_TYPE): await toggle_lock(update, context, 'رسانه', False)
 
+async def delete_later(context, chat_id, message_id, seconds):
+    await asyncio.sleep(seconds)
+    try:
+        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+    except Exception:
+        pass
+
 # محافظ رسانه‌ها
 async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.effective_message
@@ -93,49 +101,41 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         pass
 
-    # چک کردن اینکه آیا این نوع پیام قفل هست یا نه
-    is_locked = False
-    if (message.animation or message.document) and is_lock_enabled(chat.id, 'lock_gif'):
-        is_locked = True
-    elif message.sticker and is_lock_enabled(chat.id, 'lock_sticker'):
-        is_locked = True
-    elif message.photo and is_lock_enabled(chat.id, 'lock_photo'):
-        is_locked = True
-    elif message.video and is_lock_enabled(chat.id, 'lock_video'):
-        is_locked = True
-    elif message.video_note and is_lock_enabled(chat.id, 'lock_video_note'):
-        is_locked = True
-        
-    # قفل رسانه کلی
-    if is_lock_enabled(chat.id, 'lock_media'):
-        if message.photo or message.video or message.animation or message.sticker or message.video_note or message.voice or message.audio or message.document:
-            is_locked = True
+    media_name = None
+    
+    if message.animation:
+        if is_lock_enabled(chat.id, 'lock_gif') or is_lock_enabled(chat.id, 'lock_media'):
+            media_name = "گیف"
+    elif message.sticker:
+        if is_lock_enabled(chat.id, 'lock_sticker') or is_lock_enabled(chat.id, 'lock_media'):
+            media_name = "استیکر"
+    elif message.photo:
+        if is_lock_enabled(chat.id, 'lock_photo') or is_lock_enabled(chat.id, 'lock_media'):
+            media_name = "عکس"
+    elif message.video:
+        if is_lock_enabled(chat.id, 'lock_video') or is_lock_enabled(chat.id, 'lock_media'):
+            media_name = "فیلم"
+    elif message.video_note:
+        if is_lock_enabled(chat.id, 'lock_video_note') or is_lock_enabled(chat.id, 'lock_media'):
+            media_name = "ویدیو مسیج"
+    elif message.voice or message.audio or message.document:
+        if is_lock_enabled(chat.id, 'lock_media'):
+            media_name = "رسانه"
 
-    if is_locked:
+    if media_name:
         try:
             await message.delete()
         except Exception:
             return
 
-        # هشدار مشابه قفل لینک
         mention = user.mention_html()
         warn_text = (
             f"⫸ کاربر گرامی : {mention} ⚠\n"
-            f"⌫ ارسال این نوع رسانه در گروه ممنوع می‌باشد به همین دلیل پیام شما پاک شد !\n"
-            f"◂ لطفاً از ارسال آن خودداری فرمایید.\n"
+            f"⌫ ارسال {media_name} در گروه ممنوع می‌باشد به همین دلیل پیام شما پاک شد !\n"
             f"⋆ با تشکر از همکاری شما."
         )
         try:
             warn = await context.bot.send_message(chat_id=chat.id, text=warn_text, parse_mode="HTML")
-            import asyncio
             asyncio.create_task(delete_later(context, chat.id, warn.message_id, 10))
         except Exception:
             pass
-
-async def delete_later(context, chat_id, message_id, seconds):
-    import asyncio
-    await asyncio.sleep(seconds)
-    try:
-        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-    except Exception:
-        pass
