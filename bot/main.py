@@ -17,10 +17,14 @@ from bot.handlers.welcome import (
     welcome_off_command,
 )
 from bot.handlers.panel import panel_command
+from bot.handlers.management import delete_command, purge_command
 from bot.handlers.locks import (
     lock_gif, unlock_gif, lock_sticker, unlock_sticker,
     lock_photo, unlock_photo, lock_video, unlock_video,
     lock_video_note, unlock_video_note, lock_media, unlock_media,
+    lock_voice, unlock_voice, lock_porn, unlock_porn,
+    lock_id, unlock_id, lock_tabchi, unlock_tabchi,
+    lock_group, unlock_group,
     media_guard
 )
 

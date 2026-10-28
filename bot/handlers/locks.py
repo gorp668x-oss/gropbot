@@ -10,7 +10,12 @@ LOCK_TYPES = {
     'عکس': 'lock_photo',
     'فیلم': 'lock_video',
     'ویدیو مسیج': 'lock_video_note',
-    'رسانه': 'lock_media'
+    'رسانه': 'lock_media',
+    'ویس': 'lock_voice',
+    'پورن': 'lock_porn',
+    'آیدی': 'lock_id',
+    'تبچی': 'lock_tabchi',
+    'گروه': 'lock_group'
 }
 
 def is_lock_enabled(chat_id: int, lock_col: str) -> bool:
@@ -118,9 +123,25 @@ async def media_guard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif message.video_note:
         if is_lock_enabled(chat.id, 'lock_video_note') or is_lock_enabled(chat.id, 'lock_media'):
             media_name = "ویدیو مسیج"
-    elif message.voice or message.audio or message.document:
+    elif message.voice:
+        if is_lock_enabled(chat.id, 'lock_voice') or is_lock_enabled(chat.id, 'lock_media'):
+            media_name = "ویس"
+    elif message.audio or message.document:
         if is_lock_enabled(chat.id, 'lock_media'):
             media_name = "رسانه"
+
+    # بررسی متنی برای قفل‌های خاص
+    text = (message.text or message.caption or "").lower()
+    
+    if text:
+        if is_lock_enabled(chat.id, 'lock_id') and ('@' in text or 't.me/' in text or 'telegram.me/' in text):
+            media_name = "آیدی/لینک"
+        elif is_lock_enabled(chat.id, 'lock_group') and ('t.me/' in text or 'telegram.me/' in text or 'joinchat' in text):
+            media_name = "لینک گروه"
+        elif is_lock_enabled(chat.id, 'lock_porn') and any(word in text for word in ['پورن', 'سکس', '18+', 'xxx', 'porn']):
+            media_name = "محتوای غیراخلاقی"
+        elif is_lock_enabled(chat.id, 'lock_tabchi') and ('تبچی' in text or 'تب چی' in text):
+            media_name = "تبلیغات"
 
     if media_name:
         try:

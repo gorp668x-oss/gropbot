@@ -29,11 +29,16 @@ def init_db():
             lock_photo BOOLEAN DEFAULT FALSE,
             lock_video BOOLEAN DEFAULT FALSE,
             lock_video_note BOOLEAN DEFAULT FALSE,
-            lock_media BOOLEAN DEFAULT FALSE
+            lock_media BOOLEAN DEFAULT FALSE,
+            lock_group BOOLEAN DEFAULT FALSE,
+            lock_tabchi BOOLEAN DEFAULT FALSE,
+            lock_id BOOLEAN DEFAULT FALSE,
+            lock_porn BOOLEAN DEFAULT FALSE,
+            lock_voice BOOLEAN DEFAULT FALSE
         )
     """)
     # اضافه کردن ستون‌ها اگه از قبل جدول وجود داشت
-    for col in ['lock_gif', 'lock_sticker', 'lock_photo', 'lock_video', 'lock_video_note', 'lock_media']:
+    for col in ['lock_gif', 'lock_sticker', 'lock_photo', 'lock_video', 'lock_video_note', 'lock_media', 'lock_voice', 'lock_porn', 'lock_id', 'lock_tabchi', 'lock_group']:
         try:
             cur.execute(f"ALTER TABLE group_settings ADD COLUMN {col} BOOLEAN DEFAULT FALSE")
             conn.commit()
