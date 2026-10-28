@@ -182,6 +182,24 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if member.id == context.bot.id:
             continue
 
+        # اگر عضو جدید یک ربات بود
+        if member.is_bot:
+            try:
+                # بن کردن ربات
+                await context.bot.ban_chat_member(chat_id=chat.id, user_id=member.id)
+                
+                # ارسال پیام اعلامیه
+                bot_name = member.first_name
+                alert_text = (
+                    f"⚠️ <b>هشدار امنیتی</b>\n\n"
+                    f"ربات مخرب <b>{bot_name}</b> توسط یکی از اعضا به گروه اضافه شد.\n"
+                    f"ربات بات اکس بلافاصله این ربات را <b>بن</b> کرد."
+                )
+                await context.bot.send_message(chat_id=chat.id, text=alert_text, parse_mode="HTML")
+            except Exception as e:
+                print(f"Error banning bot: {e}")
+            continue # ادامه حلقه برای بقیه اعضا
+
         # چک کردن اینکه تو 10 ثانیه اخیر برای این کاربر پیام نفرستاده باشیم
         last_welcome = _welcome_cooldown.get(member.id, 0)
         if current_time - last_welcome < 10:
