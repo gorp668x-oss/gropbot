@@ -185,15 +185,26 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # اگر عضو جدید یک ربات بود
         if member.is_bot:
             try:
-                # بن کردن ربات
                 await context.bot.ban_chat_member(chat_id=chat.id, user_id=member.id)
                 
-                # ارسال پیام اعلامیه
+                adder = message.from_user
+                adder_name = adder.mention_html() if adder else "ناشناس"
+                adder_id = adder.id if adder else "نامشخص"
+                adder_username = f"@{adder.username}" if adder and adder.username else "ندارد"
+                
                 bot_name = member.first_name
+                bot_id = member.id
+                bot_username = f"@{member.username}" if member.username else "ندارد"
+                
                 alert_text = (
-                    f"⚠️ <b>هشدار امنیتی</b>\n\n"
-                    f"ربات مخرب <b>{bot_name}</b> توسط یکی از اعضا به گروه اضافه شد.\n"
-                    f"ربات بات اکس بلافاصله این ربات را <b>بن</b> کرد."
+                    f"⚠️ <b>هشدار امنیتی (شناسایی ربات)</b>\n\n"
+                    f"⌫ ربات <b>{bot_name}</b> توسط {adder_name} به گروه اضافه شد و بلافاصله <b>بن</b> شد.\n\n"
+                    f"▪️ <b>اطلاعات ربات:</b>\n"
+                    f"آیدی عددی: <code>{bot_id}</code>\n"
+                    f"یوزرنیم: {bot_username}\n\n"
+                    f"▪️ <b>اطلاعات اضافه‌کننده:</b>\n"
+                    f"آیدی عددی: <code>{adder_id}</code>\n"
+                    f"یوزرنیم: {adder_username}"
                 )
                 await context.bot.send_message(chat_id=chat.id, text=alert_text, parse_mode="HTML")
             except Exception as e:
