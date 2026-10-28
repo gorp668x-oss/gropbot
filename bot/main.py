@@ -17,6 +17,12 @@ from bot.handlers.welcome import (
     welcome_off_command,
 )
 from bot.handlers.panel import panel_command
+from bot.handlers.locks import (
+    lock_gif, unlock_gif, lock_sticker, unlock_sticker,
+    lock_photo, unlock_photo, lock_video, unlock_video,
+    lock_video_note, unlock_video_note, lock_media, unlock_media,
+    media_guard
+)
 
 
 # Regex خوشامد
@@ -70,6 +76,32 @@ def main():
         filters.ChatType.GROUPS & filters.Regex(r"^پنل$"),
         panel_command
     ))
+
+
+    # قفل رسانه ها
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^قفل گیف$"), lock_gif))
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^باز کردن گیف$|^بازکردن گیف$"), unlock_gif))
+    
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^قفل استیکر$"), lock_sticker))
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^باز کردن استیکر$|^بازکردن استیکر$"), unlock_sticker))
+    
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^قفل عکس$"), lock_photo))
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^باز کردن عکس$|^بازکردن عکس$"), unlock_photo))
+    
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^قفل فیلم$"), lock_video))
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^باز کردن فیلم$|^بازکردن فیلم$"), unlock_video))
+    
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^قفل ویدیو مسیج$"), lock_video_note))
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^باز کردن ویدیو مسیج$|^بازکردن ویدیو مسیج$"), unlock_video_note))
+    
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^قفل رسانه$"), lock_media))
+    app.add_handler(MessageHandler(filters.ChatType.GROUPS & filters.Regex(r"^باز کردن رسانه$|^بازکردن رسانه$"), unlock_media))
+
+    # گارد رسانه ها
+    app.add_handler(MessageHandler(
+        (filters.ANIMATION | filters.Sticker.ALL | filters.PHOTO | filters.VIDEO | filters.VIDEO_NOTE | filters.Document.ALL | filters.VOICE | filters.AUDIO) & filters.ChatType.GROUPS,
+        media_guard
+    ), group=3)
 
     # Callback handler
     app.add_handler(CallbackQueryHandler(button_handler))

@@ -18,6 +18,28 @@ def init_db():
             started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    # جدول تنظیمات گروه
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS group_settings (
+            chat_id BIGINT PRIMARY KEY,
+            lock_link BOOLEAN DEFAULT FALSE,
+            welcome_enabled BOOLEAN DEFAULT TRUE,
+            lock_gif BOOLEAN DEFAULT FALSE,
+            lock_sticker BOOLEAN DEFAULT FALSE,
+            lock_photo BOOLEAN DEFAULT FALSE,
+            lock_video BOOLEAN DEFAULT FALSE,
+            lock_video_note BOOLEAN DEFAULT FALSE,
+            lock_media BOOLEAN DEFAULT FALSE
+        )
+    """)
+    # اضافه کردن ستون‌ها اگه از قبل جدول وجود داشت
+    for col in ['lock_gif', 'lock_sticker', 'lock_photo', 'lock_video', 'lock_video_note', 'lock_media']:
+        try:
+            cur.execute(f"ALTER TABLE group_settings ADD COLUMN {col} BOOLEAN DEFAULT FALSE")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            
     conn.commit()
     cur.close()
     conn.close()
