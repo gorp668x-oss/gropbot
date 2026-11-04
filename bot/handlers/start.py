@@ -1,8 +1,5 @@
-import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.constants import ChatAction
-
 from bot.database import get_connection
 from bot.texts.welcome import WELCOME_TEXT
 from bot.keyboards.main_menu import get_main_keyboard
@@ -36,16 +33,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     final_text = WELCOME_TEXT.format(mention=mention)
 
-    # ۱. ارسال اکشن تایپ
-    await context.bot.send_chat_action(
-        chat_id=update.effective_chat.id,
-        action=ChatAction.TYPING
-    )
-
-    # ۲. تاخیر ۲ ثانیه‌ای (مثل کد خودت)
-    await asyncio.sleep(2)
-
-    # ۳. ارسال نهایی متن با دکمه‌ها
     await update.message.reply_html(
         final_text,
         reply_markup=get_main_keyboard(),
