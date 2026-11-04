@@ -30,6 +30,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         final_text=final_text,
         reply_markup=get_main_keyboard(),
         parse_mode="HTML",
-        steps=40,
-        delay=0.04
+        steps=8,
+        delay=0.01
     )

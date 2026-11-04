@@ -231,7 +231,7 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
             try:
                 msg = await context.bot.send_message(chat_id=chat.id, text=".", parse_mode="HTML")
                 total_len = len(text)
-                step_size = max(1, total_len // 30)
+                step_size = max(1, total_len // 8) # 8 مرحله
                 current = ""
                 i = step_size
                 while i < total_len:
@@ -242,7 +242,7 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
                             current = chunk
                         except Exception:
                             pass
-                    await asyncio.sleep(0.04)
+                    await asyncio.sleep(0.01) # تاخیر 0.01
                     i += step_size
                 try:
                     await msg.edit_text(text, parse_mode="HTML")
