@@ -42,7 +42,8 @@ async def panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         final_text=text,
         reply_markup=get_main_panel_keyboard(),
         parse_mode="HTML",
-        delay=0.01
+        delay=0.01,
+        reply_to_message_id=update.message.message_id
     )
     
     task = asyncio.create_task(close_panel_after_timeout(context, chat.id, msg.message_id))

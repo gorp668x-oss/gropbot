@@ -12,22 +12,24 @@ async def send_live_message(
     reply_markup: InlineKeyboardMarkup = None,
     parse_mode: str = "HTML",
     delay: float = 0.01,
+    reply_to_message_id: int = None,
 ):
     # پیام اولیه خالی
     try:
-        msg = await bot.send_message(chat_id=chat_id, text=".")
+        msg = await bot.send_message(
+            chat_id=chat_id, 
+            text=".", 
+            reply_to_message_id=reply_to_message_id
+        )
     except Exception as e:
         logger.exception(f"Could not send initial message: {e}")
         return None
 
     # تقسیم متن به کلمات (با حفظ فاصله‌ها و خطوط جدید)
-    # ما از splitlines استفاده می‌کنیم تا هر خط رو جدا کنیم
     lines = final_text.split('\n')
-    
     current_text = ""
     
     for line_idx, line in enumerate(lines):
-        # اگر خط خالی بود، یعنی یه Enter اضافه شده
         if line == "":
             current_text += "\n"
             try:
@@ -37,9 +39,7 @@ async def send_live_message(
             await asyncio.sleep(0.05)
             continue
             
-        # خط رو به کلمات تقسیم کن
         words = line.split(' ')
-        
         line_text = ""
         for word_idx, word in enumerate(words):
             if line_text:
@@ -47,13 +47,11 @@ async def send_live_message(
             else:
                 line_text = word
                 
-            # متن نهایی این مرحله = متن قبلی + خط جدید
             if current_text:
                 display_text = current_text + "\n" + line_text if line_idx > 0 else current_text + line_text
             else:
                 display_text = line_text
 
-            # آپدیت پیام با متن جدید
             try:
                 await msg.edit_text(display_text, parse_mode=parse_mode)
             except BadRequest as e:
@@ -66,13 +64,11 @@ async def send_live_message(
             
             await asyncio.sleep(delay)
 
-        # بعد از تموم شدن هر خط، یه خط خالی اضافه کن
         if current_text:
             current_text += "\n" + line_text
         else:
             current_text = line_text
             
-        # اگر خط آخر نبود، یه Enter اضافه کن
         if line_idx < len(lines) - 1:
             current_text += "\n"
             try:
@@ -81,12 +77,17 @@ async def send_live_message(
                 pass
             await asyncio.sleep(0.05)
 
-    # پیام نهایی با دکمه‌ها
     try:
         await msg.edit_text(final_text, parse_mode=parse_mode, reply_markup=reply_markup)
     except BadRequest:
         try:
-            await bot.send_message(chat_id=chat_id, text=final_text, parse_mode=parse_mode, reply_markup=reply_markup)
+            await bot.send_message(
+                chat_id=chat_id, 
+                text=final_text, 
+                parse_mode=parse_mode, 
+                reply_markup=reply_markup,
+                reply_to_message_id=reply_to_message_id
+            )
         except Exception:
             pass
     except Exception:

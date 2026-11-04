@@ -45,5 +45,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         final_text=final_text,
         reply_markup=get_main_keyboard(),
         parse_mode="HTML",
-        delay=0.01
+        delay=0.01,
+        reply_to_message_id=update.message.message_id
     )
