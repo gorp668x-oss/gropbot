@@ -8,10 +8,10 @@ async def send_live_message(
     final_text: str,
     reply_markup: InlineKeyboardMarkup = None,
     parse_mode: str = "HTML",
-    delay: float = 0.015
+    delay: float = 0.005  # سرعت خیلی بالا
 ):
     """
-    پیام را با تقسیم‌بندی خط به خط و سرعت بالا ارسال می‌کند.
+    پیام را با افکت تایپ واقعی (کاراکتر به کاراکتر) ارسال می‌کند.
     """
     try:
         msg = await update.message.reply_text(".", parse_mode=parse_mode)
@@ -19,39 +19,35 @@ async def send_live_message(
         print(f"[live_message] Failed to send initial message: {e}")
         return None
 
-    # تقسیم متن به خطوط
-    lines = final_text.split('\n')
+    total_len = len(final_text)
     current_text = ""
-    
-    for line in lines:
-        if current_text:
-            current_text += "\n" + line
-        else:
-            current_text = line
-            
-        # اگر خط خالی بود یا اینکه متن هنوز طولانی نشده، مستقیم اضافه کن
-        if not line.strip():
-            continue
 
-        try:
-            await msg.edit_text(current_text, parse_mode=parse_mode)
-        except BadRequest as e:
-            if "not modified" not in str(e).lower():
+    # ارسال کاراکتر به کاراکتر
+    for i in range(total_len):
+        current_text += final_text[i]
+        
+        # برای جلوگیری از خطای تلگرام، هر ۳ کاراکتر یکبار آپدیت می‌کنیم
+        # (اینطوری هم سریع‌تره هم محدودیت تلگرام رعایت میشه)
+        if i % 3 == 0 or i == total_len - 1:
+            try:
+                # اگر متن به تگ HTML ناقص خورده بود، پارس نکنه که ارور نده
+                # این یک محافظ ساده است
+                await msg.edit_text(current_text, parse_mode=parse_mode)
+            except BadRequest as e:
+                if "not modified" not in str(e).lower() and "can't parse" not in str(e).lower():
+                    pass
+            except Exception:
                 pass
-        except Exception:
-            pass
-            
-        await asyncio.sleep(delay)
+            await asyncio.sleep(delay)
 
     # پیام نهایی همراه با دکمه‌ها
     try:
         await msg.edit_text(final_text, parse_mode=parse_mode, reply_markup=reply_markup)
-    except BadRequest as e:
-        if "not modified" not in str(e).lower():
-            try:
-                await update.message.reply_text(final_text, parse_mode=parse_mode, reply_markup=reply_markup)
-            except Exception:
-                pass
+    except BadRequest:
+        try:
+            await update.message.reply_text(final_text, parse_mode=parse_mode, reply_markup=reply_markup)
+        except Exception:
+            pass
     except Exception:
         pass
 

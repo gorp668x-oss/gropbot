@@ -230,20 +230,16 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
         async def _live_welcome():
             try:
                 msg = await context.bot.send_message(chat_id=chat.id, text=".", parse_mode="HTML")
-                lines = text.split('\n')
+                total_len = len(text)
                 current_text = ""
-                for line in lines:
-                    if current_text:
-                        current_text += "\n" + line
-                    else:
-                        current_text = line
-                    if not line.strip():
-                        continue
-                    try:
-                        await msg.edit_text(current_text, parse_mode="HTML")
-                    except Exception:
-                        pass
-                    await asyncio.sleep(0.01)
+                for i in range(total_len):
+                    current_text += text[i]
+                    if i % 3 == 0 or i == total_len - 1:
+                        try:
+                            await msg.edit_text(current_text, parse_mode="HTML")
+                        except Exception:
+                            pass
+                        await asyncio.sleep(0.005)
                 try:
                     await msg.edit_text(text, parse_mode="HTML")
                 except Exception:
