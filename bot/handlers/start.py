@@ -3,7 +3,6 @@ from telegram.ext import ContextTypes
 from bot.database import get_connection
 from bot.texts.welcome import WELCOME_TEXT
 from bot.keyboards.main_menu import get_main_keyboard
-from bot.utils.live_message import send_live_message
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -37,12 +36,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     final_text = WELCOME_TEXT.format(mention=mention)
     
-    await send_live_message(
-        bot=context.bot,
-        chat_id=update.effective_chat.id,
-        final_text=final_text,
-        reply_markup=get_main_keyboard(),
-        parse_mode="HTML",
-        delay=0.02,
-        reply_to_message_id=update.message.message_id
+    # ارسال ساده و ثابت (بدون افکت ویرایشی)
+    await update.message.reply_html(
+        final_text,
+        reply_markup=get_main_keyboard()
     )
