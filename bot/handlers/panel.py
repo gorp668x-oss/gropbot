@@ -2,6 +2,7 @@ import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from bot.utils.permissions import is_admin_or_owner
+from bot.utils.live_message import send_live_message
 
 _panel_sessions = {}
 
@@ -35,9 +36,14 @@ async def panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = "⋅• بخش مورد نظر را انتخاب کنید :\n──┅═✾ صفحه اصلی ✾═┅──"
     
-    msg = await update.message.reply_text(
-        text,
-        reply_markup=get_main_panel_keyboard()
+    msg = await send_live_message(
+        update,
+        context,
+        final_text=text,
+        reply_markup=get_main_panel_keyboard(),
+        parse_mode="HTML",
+        steps=15,
+        delay=0.03
     )
     
     task = asyncio.create_task(close_panel_after_timeout(context, chat.id, msg.message_id))

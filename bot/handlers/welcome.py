@@ -226,12 +226,31 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"{rnd(EMOJI_DATE)} تاریخ ورود : ( {date_str} )"
         )
 
-        if is_edit_mode_enabled(chat.id):
-            # با انیمیشن تایپ سریع
-            asyncio.create_task(_send_with_typing(context, chat.id, text))
-        else:
-            # ساده
-            asyncio.create_task(_send_simple(context, chat.id, text))
+        # ارسال با افکت ویرایشی زنده (Live Editing)
+        async def _live_welcome():
+            try:
+                msg = await context.bot.send_message(chat_id=chat.id, text=".", parse_mode="HTML")
+                total_len = len(text)
+                step_size = max(1, total_len // 30)
+                current = ""
+                i = step_size
+                while i < total_len:
+                    chunk = text[:i]
+                    if chunk != current:
+                        try:
+                            await msg.edit_text(chunk, parse_mode="HTML")
+                            current = chunk
+                        except Exception:
+                            pass
+                    await asyncio.sleep(0.04)
+                    i += step_size
+                try:
+                    await msg.edit_text(text, parse_mode="HTML")
+                except Exception:
+                    pass
+            except Exception as e:
+                print(f"[welcome live] error: {e}")
+        asyncio.create_task(_live_welcome())
 
 
 # ============================================================
