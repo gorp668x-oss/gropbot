@@ -42,7 +42,6 @@ async def panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         final_text=text,
         reply_markup=get_main_panel_keyboard(),
         parse_mode="HTML",
-        steps=5,
         delay=0.01
     )
     
