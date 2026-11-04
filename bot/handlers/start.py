@@ -1,4 +1,5 @@
 import asyncio
+import time
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.error import BadRequest, RetryAfter
@@ -18,7 +19,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         '</a>'
     )
 
-    # ثبت کاربر در دیتابیس
+    # ثبت کاربر
     conn = None
     cur = None
     try:
@@ -33,58 +34,40 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """, (user.id, user.username, user.first_name))
         conn.commit()
     except Exception as e:
-        print(f"Database error in start: {e}")
+        print(f"Database error: {e}")
     finally:
         if cur: cur.close()
         if conn: conn.close()
 
     final_text = WELCOME_TEXT.format(mention=mention)
 
-    # ارسال پیام اولیه خالی
-    msg = await update.message.reply_text(".")
-
-    # تقسیم متن به خطوط برای تایپ تدریجی
-    lines = final_text.split('\n')
-    current_text = ""
-
-    for i, line in enumerate(lines):
-        if current_text:
-            current_text += "\n" + line
-        else:
-            current_text = line
-
-        # اگر خط خالی بود، فقط یک خط جدید اضافه کن
-        if line == "":
-            try:
-                await msg.edit_text(current_text, parse_mode="HTML")
-            except Exception:
-                pass
-            await asyncio.sleep(0.1)
-            continue
-
-        try:
-            # ویرایش پیام با متن تا این خط
-            await msg.edit_text(current_text, parse_mode="HTML")
-        except BadRequest as e:
-            if "not modified" not in str(e).lower():
-                pass
-        except RetryAfter as e:
-            await asyncio.sleep(e.retry_after)
-        except Exception:
-            pass
-
-        # تاخیر ایمن برای جلوگیری از بلاک شدن توسط تلگرام
-        await asyncio.sleep(0.4)
-
-    # ارسال نهایی با دکمه‌ها
-    try:
-        await msg.edit_text(
-            final_text,
-            parse_mode="HTML",
-            reply_markup=get_main_keyboard(),
-            disable_web_page_preview=True
-        )
-    except BadRequest:
+    # فقط توی چت خصوصی از Draft استفاده کن
+    if update.effective_chat.type == "private":
+        draft_id = int(time.time() * 1000) % 2147483647
+        if draft_id == 0: draft_id = 1
+        
+        # شبیه‌سازی تایپ با sendMessageDraft
+        words = final_text.split(' ')
+        accumulated = ""
+        last_update = 0
+        
+        for i, word in enumerate(words):
+            accumulated += word + " "
+            now = time.monotonic()
+            # هر ۸۰ میلی‌ثانیه یکبار آپدیت کن تا ریت‌لیمیت نخوری
+            if now - last_update >= 0.08 or i == len(words) - 1:
+                try:
+                    await context.bot.send_message_draft(
+                        chat_id=update.effective_chat.id,
+                        draft_id=draft_id,
+                        text=accumulated
+                    )
+                    last_update = now
+                except Exception as e:
+                    print(f"Draft error: {e}")
+                    break
+        
+        # پیام نهایی با دکمه‌ها (Draft رو جایگزین می‌کنه)
         try:
             await update.message.reply_html(
                 final_text,
@@ -92,5 +75,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception:
             pass
-    except Exception:
-        pass
+    else:
+        # توی گروه‌ها همون روش قدیمی
+        await update.message.reply_html(
+            final_text,
+            reply_markup=get_main_keyboard()
+        )
