@@ -1,11 +1,16 @@
 import asyncio
+import re
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.constants import ChatAction
+from telegram.error import BadRequest
 
 from bot.database import get_connection
 from bot.texts.welcome import WELCOME_TEXT
 from bot.keyboards.main_menu import get_main_keyboard
+
+def strip_html(text):
+    """حذف تگ‌های HTML برای نمایش تدریجی بدون خطا"""
+    return re.sub(r'<[^>]+>', '', text)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -35,19 +40,38 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if conn: conn.close()
 
     final_text = WELCOME_TEXT.format(mention=mention)
+    plain_text = strip_html(final_text)
 
-    # ۱. ارسال اکشن تایپ
-    await context.bot.send_chat_action(
-        chat_id=update.effective_chat.id,
-        action=ChatAction.TYPING
-    )
+    # ۱. ارسال پیام اولیه
+    msg = await update.message.reply_text("⌨️")
 
-    # ۲. تاخیر ۲ ثانیه‌ای (مثل کد خودت)
-    await asyncio.sleep(2)
+    # ۲. تایپ تدریجی با تکه‌های بزرگتر و سرعت بالا
+    current_text = ""
+    chunk_size = 35
 
-    # ۳. ارسال نهایی متن با دکمه‌ها
-    await update.message.reply_html(
-        final_text,
-        reply_markup=get_main_keyboard(),
-        disable_web_page_preview=True
-    )
+    for i in range(0, len(plain_text), chunk_size):
+        current_text += plain_text[i:i + chunk_size]
+        try:
+            await msg.edit_text(current_text)
+        except BadRequest as e:
+            if "not modified" not in str(e).lower():
+                pass
+        except Exception:
+            pass
+        await asyncio.sleep(0.08)
+
+    # ۳. نمایش نهایی با HTML و دکمه‌ها
+    try:
+        await msg.edit_text(
+            final_text,
+            parse_mode="HTML",
+            reply_markup=get_main_keyboard(),
+            disable_web_page_preview=True
+        )
+    except BadRequest:
+        try:
+            await msg.edit_reply_markup(reply_markup=get_main_keyboard())
+        except Exception:
+            pass
+    except Exception:
+        pass
