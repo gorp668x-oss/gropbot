@@ -5,8 +5,8 @@ SUPPORT_PV_URL = "https://t.me/XMrAmer"
 
 def get_support_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("👨‍💻 ارتباط مستقیم", url=SUPPORT_PV_URL)],
-        [InlineKeyboardButton("🎫 ارسال تیکت", callback_data="support_ticket")],
+        [InlineKeyboardButton("📞 پشتیبانی مستقیم", url=SUPPORT_PV_URL)],
+        [InlineKeyboardButton("📨 پشتیبانی غیرمستقیم", callback_data="support_ticket")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="back")],
     ])
 

@@ -21,10 +21,15 @@ from bot.texts.support import (
     TICKET_REPLY_TEXT,
 )
 from bot.utils.permissions import BOT_OWNER_ID
+from bot.utils.screen import show_screen
+from bot.utils.stream import stream_draft
 
-TICKET_WINDOW = 600      # ثانیه؛ مدت فعال بودن حالت ارسال تیکت
-TICKET_COOLDOWN = 20     # ثانیه؛ فاصله بین دو تیکت یک کاربر
-MAX_LEN = 3000           # حداکثر طول پیام تیکت
+TICKET_WINDOW = 600      # ثانیه؛ مدت فعال بودن حالت ارسال پیام
+TICKET_COOLDOWN = 20     # ثانیه؛ فاصله بین دو پیام یک کاربر
+MAX_LEN = 3000           # حداکثر طول پیام
+
+TOAST_SUPPORT = "🎧 به بخش پشتیبانی خوش آمدید"
+TOAST_TICKET = "📨 به بخش پشتیبانی غیرمستقیم خوش آمدید"
 
 _last_ticket = {}
 
@@ -101,22 +106,15 @@ def _find_by_owner_message(owner_message_id: int):
 # ───────────────────────── دکمه‌ها ─────────────────────────
 async def support_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
 
     if query.data == "support":
         context.user_data.pop("ticket_until", None)
-        await query.edit_message_text(
-            SUPPORT_TEXT,
-            parse_mode=ParseMode.HTML,
-            reply_markup=get_support_keyboard(),
-        )
+        await show_screen(update, context, SUPPORT_TEXT, get_support_keyboard(), TOAST_SUPPORT)
     elif query.data == "support_ticket":
         context.user_data["ticket_until"] = time.time() + TICKET_WINDOW
-        await query.edit_message_text(
-            TICKET_PROMPT_TEXT,
-            parse_mode=ParseMode.HTML,
-            reply_markup=get_ticket_prompt_keyboard(),
-        )
+        await show_screen(update, context, TICKET_PROMPT_TEXT, get_ticket_prompt_keyboard(), TOAST_TICKET)
+    else:
+        await query.answer()
 
 
 # ───────────────────────── پیام‌های متنی پیوی ─────────────────────────
@@ -126,7 +124,7 @@ async def ticket_message_handler(update: Update, context: ContextTypes.DEFAULT_T
     if not message or not user or not message.text:
         return
 
-    # ۱) پاسخ سازنده به تیکت (ریپلای روی پیام تیکت)
+    # ۱) پاسخ سازنده (ریپلای روی پیام تیکت)
     if user.id == BOT_OWNER_ID and message.reply_to_message:
         ticket = _find_by_owner_message(message.reply_to_message.message_id)
         if ticket:
@@ -144,7 +142,7 @@ async def ticket_message_handler(update: Update, context: ContextTypes.DEFAULT_T
             raise ApplicationHandlerStop
         return
 
-    # ۲) کاربر در حالت ارسال تیکت
+    # ۲) کاربر در حالت پشتیبانی غیرمستقیم
     if time.time() > context.user_data.get("ticket_until", 0):
         return
 
@@ -162,7 +160,7 @@ async def ticket_message_handler(update: Update, context: ContextTypes.DEFAULT_T
         code = _create_ticket(user, message.text)
     except Exception as e:
         print(f"Ticket DB error: {e}")
-        await message.reply_text("❌ خطا در ثبت تیکت. لطفاً بعداً دوباره تلاش کنید.")
+        await message.reply_text("❌ خطا در ثبت پیام. لطفاً بعداً دوباره تلاش کنید.")
         raise ApplicationHandlerStop
 
     try:
@@ -181,12 +179,18 @@ async def ticket_message_handler(update: Update, context: ContextTypes.DEFAULT_T
     except Exception as e:
         print(f"Ticket delivery error: {e}")
         _update_ticket(code, status="undelivered")
-        await message.reply_text("❌ ارسال تیکت ناموفق بود. لطفاً از «ارتباط مستقیم» استفاده کنید.")
+        await message.reply_text("❌ ارسال ناموفق بود. لطفاً از «پشتیبانی مستقیم» استفاده کنید.")
         raise ApplicationHandlerStop
 
     context.user_data.pop("ticket_until", None)
+
+    sent_text = TICKET_SENT_TEXT.format(code=code)
+    await stream_draft(
+        context.bot.token, message.chat_id, sent_text,
+        delay=0.12, max_steps=10,
+    )
     await message.reply_text(
-        TICKET_SENT_TEXT.format(code=code),
+        sent_text,
         parse_mode=ParseMode.HTML,
         reply_markup=get_after_ticket_keyboard(),
     )
