@@ -1,23 +1,20 @@
-import asyncio
-import re
-from telegram import Update
+import html
+
+from telegram import Update, LinkPreviewOptions
 from telegram.ext import ContextTypes
-from telegram.error import BadRequest
 
 from bot.database import get_connection
 from bot.texts.welcome import WELCOME_TEXT
 from bot.keyboards.main_menu import get_main_keyboard
+from bot.utils.stream import stream_draft
 
-def strip_html(text):
-    """حذف تگ‌های HTML برای نمایش تدریجی بدون خطا"""
-    return re.sub(r'<[^>]+>', '', text)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if user is None or update.effective_message is None:
         return
 
-    display_name = user.first_name
+    display_name = html.escape(user.first_name or "کاربر")
     mention = f'<a href="tg://user?id={user.id}">{display_name}</a>'
 
     conn = None
@@ -40,38 +37,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if conn: conn.close()
 
     final_text = WELCOME_TEXT.format(mention=mention)
-    plain_text = strip_html(final_text)
 
-    # ۱. ارسال پیام اولیه
-    msg = await update.message.reply_text("⌨️")
+    # نمایش تدریجی متن (sendMessageDraft)؛ اگر خطا بدهد مستقیم ادامه می‌دهد
+    await stream_draft(context.bot.token, update.effective_chat.id, final_text)
 
-    # ۲. تایپ تدریجی با تکه‌های بزرگتر و سرعت بالا
-    current_text = ""
-    chunk_size = 35
-
-    for i in range(0, len(plain_text), chunk_size):
-        current_text += plain_text[i:i + chunk_size]
-        try:
-            await msg.edit_text(current_text)
-        except BadRequest as e:
-            if "not modified" not in str(e).lower():
-                pass
-        except Exception:
-            pass
-        await asyncio.sleep(0.08)
-
-    # ۳. نمایش نهایی با HTML و دکمه‌ها
-    try:
-        await msg.edit_text(
-            final_text,
-            parse_mode="HTML",
-            reply_markup=get_main_keyboard(),
-            disable_web_page_preview=True
-        )
-    except BadRequest:
-        try:
-            await msg.edit_reply_markup(reply_markup=get_main_keyboard())
-        except Exception:
-            pass
-    except Exception:
-        pass
+    await update.message.reply_html(
+        final_text,
+        reply_markup=get_main_keyboard(),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
