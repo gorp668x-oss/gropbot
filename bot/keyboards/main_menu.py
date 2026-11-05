@@ -14,7 +14,7 @@ def get_main_keyboard():
             InlineKeyboardButton("🆚 تفاوت ربات رایگان با اشتراکی", callback_data="diff", style="success"),
         ],
         [
-            InlineKeyboardButton("👨‍💻 پشتیبانی", url="https://t.me/XMrAmer"),
+            InlineKeyboardButton("👨‍💻 پشتیبانی", callback_data="support"),
             InlineKeyboardButton("ℹ️ درباره ما", callback_data="about"),
         ],
     ]

@@ -1,3 +1,4 @@
+import html
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -49,7 +50,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     elif query.data == "back":
         user = query.from_user
-        mention = f'<a href="tg://user?id={user.id}">𓄂꯭ꪰᴀ꯭ᷧᴍ꯭ⷨᴇ꯭ⷷʀ꯭ᷢ↬𓃮™</a>'
+        mention = f'<a href="tg://user?id={user.id}">{html.escape(user.first_name or "کاربر")}</a>'
         await query.edit_message_text(
             text=WELCOME_TEXT.format(mention=mention),
             parse_mode="HTML",

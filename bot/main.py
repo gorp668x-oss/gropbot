@@ -8,6 +8,7 @@ from bot.config import TELEGRAM_TOKEN
 from bot.database import init_db
 from bot.handlers.start import start
 from bot.handlers.buttons import button_handler
+from bot.handlers.support import support_callback, ticket_message_handler
 from bot.handlers.unknown import unknown_message
 from bot.handlers.locklink import lock_link_command, unlock_link_command
 from bot.handlers.link_guard import link_guard
@@ -108,7 +109,11 @@ def main():
     ), group=3)
 
     # Callback handler
+    app.add_handler(CallbackQueryHandler(support_callback, pattern=r"^support(_ticket)?$"))
     app.add_handler(CallbackQueryHandler(button_handler))
+
+    # تیکت پشتیبانی (قبل از پاسخ خودکار پیوی)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, ticket_message_handler), group=-1)
 
     # پاسخ خودکار پیوی
     app.add_handler(MessageHandler(
