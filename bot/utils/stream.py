@@ -51,6 +51,7 @@ async def stream_draft(token: str, chat_id: int, text: str,
                     print(f"sendMessageDraft failed: {r.text}")
                     return False
                 await asyncio.sleep(delay)
+        await asyncio.sleep(1.0)
         return True
     except Exception as e:
         print(f"sendMessageDraft error: {e}")
