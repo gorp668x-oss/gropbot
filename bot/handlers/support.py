@@ -22,7 +22,6 @@ from bot.texts.support import (
 )
 from bot.utils.permissions import BOT_OWNER_ID
 from bot.utils.screen import show_screen
-from bot.utils.stream import stream_draft
 
 TICKET_WINDOW = 600      # ثانیه؛ مدت فعال بودن حالت ارسال پیام
 TICKET_COOLDOWN = 20     # ثانیه؛ فاصله بین دو پیام یک کاربر
@@ -185,10 +184,6 @@ async def ticket_message_handler(update: Update, context: ContextTypes.DEFAULT_T
     context.user_data.pop("ticket_until", None)
 
     sent_text = TICKET_SENT_TEXT.format(code=code)
-    await stream_draft(
-        context.bot.token, message.chat_id, sent_text,
-        delay=0.12, max_steps=10,
-    )
     await message.reply_text(
         sent_text,
         parse_mode=ParseMode.HTML,
