@@ -1,9 +1,14 @@
 from telegram.request import HTTPXRequest
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import (
+    Application, CommandHandler, CallbackQueryHandler,
+    MessageHandler, filters,
+)
 
 from bot.config import TELEGRAM_TOKEN
 from bot.database import init_db
 from bot.handlers.start import start
+from bot.handlers.buttons import button_handler
+from bot.handlers.support import support_callback, ticket_message_handler
 from bot.handlers.unknown import unknown_message
 
 
@@ -12,16 +17,26 @@ def main():
     request = HTTPXRequest(connect_timeout=15.0, read_timeout=30.0, pool_timeout=10.0)
     app = Application.builder().token(TELEGRAM_TOKEN).request(request).build()
 
-    # فقط دستور استارت در پیوی
+    # /start فقط در پیوی
     app.add_handler(CommandHandler("start", start, filters=filters.ChatType.PRIVATE))
 
-    # پاسخ خودکار به پیام‌های ناشناس در پیوی
+    # دکمه‌های منو: پشتیبانی (قبل از هندلر عمومی) و بقیه دکمه‌ها
+    app.add_handler(CallbackQueryHandler(support_callback, pattern=r"^support(_ticket)?$"))
+    app.add_handler(CallbackQueryHandler(button_handler))
+
+    # پشتیبانی غیرمستقیم / پاسخ سازنده (قبل از پاسخ خودکار پیوی)
     app.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE,
-        unknown_message,
+        ticket_message_handler
+    ), group=-1)
+
+    # پاسخ خودکار پیوی
+    app.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE,
+        unknown_message
     ))
 
-    print("Bot is running (only /start)...")
+    print("Bot is running...")
     app.run_polling()
 
 
