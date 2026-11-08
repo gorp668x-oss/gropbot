@@ -39,7 +39,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     final_text = WELCOME_TEXT.format(mention=mention)
 
     # نمایش تدریجی متن (sendMessageDraft)؛ اگر خطا بدهد مستقیم ادامه می‌دهد
-    await stream_draft(context.bot.token, update.effective_chat.id, final_text)
+    await stream_draft(context.bot.token, update.effective_chat.id, final_text, delay=0.04, max_steps=14)
 
     await update.message.reply_html(
         final_text,
